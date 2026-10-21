@@ -28,7 +28,9 @@ import {
   Receipt,
   FileSpreadsheet,
   Truck,
-  MapPin
+  MapPin,
+  Contact,
+  ChevronDown
 } from 'lucide-react';
 import { 
   Order, 
@@ -42,6 +44,7 @@ import {
   ActivityLog, 
   StoreSettings,
   Supplier,
+  Customer,
   PurchaseOrder,
   Expense,
   DamageWaste,
@@ -63,6 +66,7 @@ import InventoryManagement from './admin/InventoryManagement';
 import AccountsManagement from './admin/AccountsManagement';
 import CourierManagement from './admin/CourierManagement';
 import CourierPointManagement from './admin/CourierPointManagement';
+import ContactsManagement from './admin/ContactsManagement';
 
 interface AdminPanelProps {
   currentUser: User | null;
@@ -149,8 +153,11 @@ export default function AdminPanel({
 
   // Selected administrative view state
   const [activeTab, setActiveTab] = useState<
-    'overview' | 'products' | 'categories' | 'orders' | 'inventory' | 'accounts' | 'courier' | 'courier-points' | 'promotions' | 'users' | 'settings'
+    'overview' | 'contacts' | 'suppliers' | 'customers' | 'products' | 'categories' | 'orders' | 'inventory' | 'accounts' | 'courier' | 'courier-points' | 'promotions' | 'users' | 'settings'
   >('overview');
+
+  // Contacts submenu open state
+  const [isContactsMenuOpen, setIsContactsMenuOpen] = useState(true);
 
   // Loading indicator & error banner state
   const [loading, setLoading] = useState(false);
@@ -166,6 +173,7 @@ export default function AdminPanel({
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
   const [usersList, setUsersList] = useState<any[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [purchases, setPurchases] = useState<PurchaseOrder[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [damages, setDamages] = useState<DamageWaste[]>([]);
@@ -347,8 +355,9 @@ export default function AdminPanel({
 
         // Fetch enterprise inventory & accounts modules
         try {
-          const [supRes, poRes, expRes, dmgRes, accRes, sumRes] = await Promise.all([
+          const [supRes, custRes, poRes, expRes, dmgRes, accRes, sumRes] = await Promise.all([
             fetch('/api/admin/suppliers', { headers: { 'x-user-email': currentUser?.email || '' } }),
+            fetch('/api/admin/customers', { headers: { 'x-user-email': currentUser?.email || '' } }),
             fetch('/api/admin/purchases', { headers: { 'x-user-email': currentUser?.email || '' } }),
             fetch('/api/admin/expenses', { headers: { 'x-user-email': currentUser?.email || '' } }),
             fetch('/api/admin/damages', { headers: { 'x-user-email': currentUser?.email || '' } }),
@@ -357,6 +366,7 @@ export default function AdminPanel({
           ]);
 
           if (supRes.ok) setSuppliers(await supRes.json());
+          if (custRes.ok) setCustomers(await custRes.json());
           if (poRes.ok) setPurchases(await poRes.json());
           if (expRes.ok) setExpenses(await expRes.json());
           if (dmgRes.ok) setDamages(await dmgRes.json());
@@ -827,6 +837,201 @@ export default function AdminPanel({
     }
   };
 
+  // Contacts: Suppliers Handlers
+  const handleAddSupplier = async (payload: any) => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/add-supplier', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-user-email': currentUser?.email || '' },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        logAdminActivity('ADD_SUPPLIER', `Registered supplier "${payload.name}"`);
+        await loadDashboardData();
+        setSuccessMsg(isBn ? 'নতুন সরবরাহকারী সফলভাবে যুক্ত হয়েছে।' : 'Supplier successfully registered.');
+      } else {
+        const err = await res.json();
+        setErrorMsg(err.error || 'Failed to add supplier.');
+      }
+    } catch (err) {
+      setErrorMsg('Failed to add supplier.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateSupplier = async (payload: any) => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/update-supplier', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-user-email': currentUser?.email || '' },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        logAdminActivity('UPDATE_SUPPLIER', `Updated supplier "${payload.name}"`);
+        await loadDashboardData();
+        setSuccessMsg(isBn ? 'সরবরাহকারীর তথ্য সফলভাবে আপডেট হয়েছে।' : 'Supplier updated.');
+      } else {
+        const err = await res.json();
+        setErrorMsg(err.error || 'Failed to update supplier.');
+      }
+    } catch (err) {
+      setErrorMsg('Supplier update failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteSupplier = async (id: string) => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/delete-supplier', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-user-email': currentUser?.email || '' },
+        body: JSON.stringify({ id })
+      });
+      if (res.ok) {
+        logAdminActivity('DELETE_SUPPLIER', `Deleted supplier record ID "${id}"`);
+        await loadDashboardData();
+        setSuccessMsg(isBn ? 'সরবরাহকারী মুছে ফেলা হয়েছে।' : 'Supplier deleted.');
+      }
+    } catch (err) {
+      setErrorMsg('Failed to delete supplier.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleToggleSupplierStatus = async (id: string) => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/toggle-supplier-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-user-email': currentUser?.email || '' },
+        body: JSON.stringify({ id })
+      });
+      if (res.ok) {
+        await loadDashboardData();
+        setSuccessMsg('Supplier status updated.');
+      }
+    } catch (err) {
+      setErrorMsg('Failed to toggle supplier status.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Contacts: Customers Handlers
+  const handleAddCustomer = async (payload: any) => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/add-customer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-user-email': currentUser?.email || '' },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        logAdminActivity('ADD_CUSTOMER', `Registered customer "${payload.businessName || payload.name}" (${payload.contactId})`);
+        await loadDashboardData();
+        setSuccessMsg(isBn ? 'কাস্টমার সফলভাবে নিবন্ধিত হয়েছে।' : 'Customer successfully registered.');
+      } else {
+        const err = await res.json();
+        setErrorMsg(err.error || 'Failed to save customer.');
+      }
+    } catch (err) {
+      setErrorMsg('Customer registration failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateCustomer = async (payload: any) => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/update-customer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-user-email': currentUser?.email || '' },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        logAdminActivity('UPDATE_CUSTOMER', `Updated customer "${payload.businessName || payload.name}" (${payload.contactId})`);
+        await loadDashboardData();
+        setSuccessMsg(isBn ? 'কাস্টমার তথ্য আপডেট হয়েছে।' : 'Customer updated successfully.');
+      } else {
+        const err = await res.json();
+        setErrorMsg(err.error || 'Failed to update customer.');
+      }
+    } catch (err) {
+      setErrorMsg('Customer update failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteCustomer = async (id: string) => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/delete-customer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-user-email': currentUser?.email || '' },
+        body: JSON.stringify({ id })
+      });
+      if (res.ok) {
+        logAdminActivity('DELETE_CUSTOMER', `Deleted customer record ID "${id}"`);
+        await loadDashboardData();
+        setSuccessMsg(isBn ? 'কাস্টমার রেকর্ড মুছে ফেলা হয়েছে।' : 'Customer deleted successfully.');
+      }
+    } catch (err) {
+      setErrorMsg('Failed to delete customer.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleToggleCustomerStatus = async (id: string) => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/toggle-customer-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-user-email': currentUser?.email || '' },
+        body: JSON.stringify({ id })
+      });
+      if (res.ok) {
+        await loadDashboardData();
+        setSuccessMsg('Customer status updated.');
+      }
+    } catch (err) {
+      setErrorMsg('Failed to toggle customer status.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePayCustomerDue = async (customerId: string, amount: number, paymentMethod: string, notes: string) => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/pay-customer-due', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-user-email': currentUser?.email || '' },
+        body: JSON.stringify({ customerId, amount, paymentMethod, notes })
+      });
+      if (res.ok) {
+        logAdminActivity('RECEIVE_CUSTOMER_DUE', `Collected ৳${amount} due payment from customer ID "${customerId}"`);
+        await loadDashboardData();
+        setSuccessMsg(isBn ? 'বকেয়া আদায়ের হিসাব সংরক্ষণ করা হয়েছে।' : 'Customer due collection recorded.');
+      } else {
+        const err = await res.json();
+        setErrorMsg(err.error || 'Failed to record customer payment.');
+      }
+    } catch (err) {
+      setErrorMsg('Due payment record failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Enterprise Accounts Transactions Handler
   const handleAddTransaction = async (payload: any) => {
     setLoading(true);
@@ -1011,8 +1216,66 @@ export default function AdminPanel({
 
               {/* Drawer Navigation Links */}
               <nav className="space-y-1 text-xs font-bold text-slate-400">
+                <button
+                  onClick={() => { setActiveTab('overview'); setIsMobileSidebarOpen(false); }}
+                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all ${
+                    activeTab === 'overview' ? 'bg-emerald-600 text-white shadow-md font-black' : 'hover:bg-slate-800 hover:text-slate-200'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <TrendingUp className="w-4 h-4 shrink-0 text-emerald-400" />
+                    <span>{isBn ? 'ড্যাশবোর্ড ওভারভিউ' : 'Overview Dashboard'}</span>
+                  </div>
+                  <ChevronRight className="w-3.5 h-3.5 opacity-50" />
+                </button>
+
+                {/* Contacts Expandable Menu (Mobile) matching screenshot */}
+                <div className="space-y-1">
+                  <button
+                    onClick={() => {
+                      setIsContactsMenuOpen(!isContactsMenuOpen);
+                      if (activeTab !== 'contacts' && activeTab !== 'suppliers' && activeTab !== 'customers') {
+                        setActiveTab('customers');
+                      }
+                    }}
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all ${
+                      (activeTab === 'contacts' || activeTab === 'suppliers' || activeTab === 'customers')
+                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-black'
+                        : 'hover:bg-slate-800 hover:text-slate-200 text-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Contact className="w-4 h-4 shrink-0 text-emerald-400" />
+                      <span>{isBn ? 'কন্টাক্টস' : 'Contacts'}</span>
+                    </div>
+                    <ChevronDown className={`w-3.5 h-3.5 opacity-70 transition-transform duration-200 ${isContactsMenuOpen ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {isContactsMenuOpen && (
+                    <div className="ml-5 pl-3 border-l-2 border-emerald-500/40 space-y-1 py-1 text-xs">
+                      <button
+                        onClick={() => { setActiveTab('suppliers'); setIsMobileSidebarOpen(false); }}
+                        className={`w-full text-left px-3 py-1.5 rounded-lg transition-colors flex items-center justify-between ${
+                          activeTab === 'suppliers' ? 'text-emerald-400 bg-slate-800 font-black' : 'text-slate-400 hover:text-slate-200'
+                        }`}
+                      >
+                        <span>{isBn ? 'সাপ্লায়ার (Suppliers)' : 'Suppliers'}</span>
+                        <span className="text-[10px] text-slate-500">({suppliers.length})</span>
+                      </button>
+                      <button
+                        onClick={() => { setActiveTab('customers'); setIsMobileSidebarOpen(false); }}
+                        className={`w-full text-left px-3 py-1.5 rounded-lg transition-colors flex items-center justify-between ${
+                          activeTab === 'customers' ? 'text-emerald-400 bg-slate-800 font-black' : 'text-slate-400 hover:text-slate-200'
+                        }`}
+                      >
+                        <span>{isBn ? 'কাস্টমার (Customers)' : 'Customers'}</span>
+                        <span className="text-[10px] text-slate-500">({customers.length})</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+
                 {[
-                  { id: 'overview', label: isBn ? 'ড্যাশবোর্ড ওভারভিউ' : 'Overview Dashboard', icon: TrendingUp },
                   { id: 'inventory', label: isBn ? '১। ইনভেন্টরি ম্যানেজমেন্ট' : '1. Inventory Control', icon: Package },
                   { id: 'accounts', label: isBn ? '২। অ্যাকাউন্টস ও আয়-ব্যয়' : '2. Accounts & Finance', icon: DollarSign },
                   { id: 'courier', label: isBn ? '৩। কুরিয়ার সার্ভিস ও বুকিং' : '3. Courier & Parcel Booking', icon: Truck },
@@ -1089,8 +1352,86 @@ export default function AdminPanel({
 
           {/* Navigation Links */}
           <nav className="space-y-1.5 text-xs font-bold text-slate-400">
+            <button
+              onClick={() => setActiveTab('overview')}
+              title={isSidebarCollapsed ? (isBn ? 'ড্যাশবোর্ড ওভারভিউ' : 'Overview Dashboard') : undefined}
+              className={`w-full flex items-center rounded-xl transition-all cursor-pointer ${
+                isSidebarCollapsed ? 'justify-center p-3' : 'justify-between px-4 py-3'
+              } ${
+                activeTab === 'overview' 
+                  ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-950/40 font-black' 
+                  : 'hover:bg-slate-800 hover:text-slate-200'
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <TrendingUp className="w-4 h-4 shrink-0 text-emerald-400" />
+                {!isSidebarCollapsed && <span className="animate-fade-in">{isBn ? 'ড্যাশবোর্ড ওভারভিউ' : 'Overview Dashboard'}</span>}
+              </div>
+              {!isSidebarCollapsed && <ChevronRight className="w-3.5 h-3.5 opacity-40 shrink-0" />}
+            </button>
+
+            {/* Contacts Expandable Menu (Desktop) matching screenshot */}
+            <div className="space-y-1">
+              <button
+                onClick={() => {
+                  setIsContactsMenuOpen(!isContactsMenuOpen);
+                  if (activeTab !== 'contacts' && activeTab !== 'suppliers' && activeTab !== 'customers') {
+                    setActiveTab('customers');
+                  }
+                }}
+                title={isSidebarCollapsed ? (isBn ? 'কন্টাক্টস' : 'Contacts') : undefined}
+                className={`w-full flex items-center rounded-xl transition-all cursor-pointer ${
+                  isSidebarCollapsed ? 'justify-center p-3' : 'justify-between px-4 py-2.5'
+                } ${
+                  (activeTab === 'contacts' || activeTab === 'suppliers' || activeTab === 'customers')
+                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-black' 
+                    : 'hover:bg-slate-800 hover:text-slate-200 text-slate-300'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <Contact className={`w-4 h-4 shrink-0 ${(activeTab === 'contacts' || activeTab === 'suppliers' || activeTab === 'customers') ? 'text-emerald-400' : 'text-slate-400'}`} />
+                  {!isSidebarCollapsed && (
+                    <span className="animate-fade-in text-xs font-bold">
+                      {isBn ? 'কন্টাক্টস' : 'Contacts'}
+                    </span>
+                  )}
+                </div>
+                {!isSidebarCollapsed && (
+                  <ChevronDown className={`w-3.5 h-3.5 opacity-70 transition-transform duration-200 ${isContactsMenuOpen ? 'rotate-180' : ''}`} />
+                )}
+              </button>
+
+              {/* Submenu for Suppliers & Customers matching screenshot indentation */}
+              {isContactsMenuOpen && !isSidebarCollapsed && (
+                <div className="ml-5 pl-3 border-l-2 border-emerald-500/40 space-y-1 py-1 animate-fade-in text-xs font-bold">
+                  <button
+                    onClick={() => setActiveTab('suppliers')}
+                    className={`w-full text-left px-3 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center justify-between ${
+                      activeTab === 'suppliers' 
+                        ? 'text-emerald-400 bg-slate-800 font-black' 
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
+                    }`}
+                  >
+                    <span>{isBn ? 'সাপ্লায়ার (Suppliers)' : 'Suppliers'}</span>
+                    <span className="text-[10px] text-slate-500">({suppliers.length})</span>
+                  </button>
+
+                  <button
+                    onClick={() => setActiveTab('customers')}
+                    className={`w-full text-left px-3 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center justify-between ${
+                      activeTab === 'customers' 
+                        ? 'text-emerald-400 bg-slate-800 font-black' 
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
+                    }`}
+                  >
+                    <span>{isBn ? 'কাস্টমার (Customers)' : 'Customers'}</span>
+                    <span className="text-[10px] text-slate-500">({customers.length})</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
             {[
-              { id: 'overview', label: isBn ? 'ড্যাশবোর্ড ওভারভিউ' : 'Overview Dashboard', icon: TrendingUp },
               { id: 'inventory', label: isBn ? '১। ইনভেন্টরি ম্যানেজমেন্ট' : '1. Inventory Control', icon: Package },
               { id: 'accounts', label: isBn ? '২। অ্যাকাউন্টস ও আয়-ব্যয়' : '2. Accounts & Finance', icon: DollarSign },
               { id: 'courier', label: isBn ? '৩। কুরিয়ার সার্ভিস ও বুকিং' : '3. Courier & Parcel Booking', icon: Truck },
@@ -1500,6 +1841,25 @@ export default function AdminPanel({
               onAddTransaction={handleAddTransaction}
               onDeleteTransaction={handleDeleteTransaction}
               currentUserEmail={currentUser?.email}
+              lang={lang}
+            />
+          )}
+
+          {(activeTab === 'contacts' || activeTab === 'suppliers' || activeTab === 'customers') && (
+            <ContactsManagement 
+              initialType={activeTab === 'suppliers' ? 'suppliers' : 'customers'}
+              customers={customers}
+              suppliers={suppliers}
+              onAddCustomer={handleAddCustomer}
+              onUpdateCustomer={handleUpdateCustomer}
+              onDeleteCustomer={handleDeleteCustomer}
+              onToggleCustomerStatus={handleToggleCustomerStatus}
+              onPayCustomerDue={handlePayCustomerDue}
+              onAddSupplier={handleAddSupplier}
+              onUpdateSupplier={handleUpdateSupplier}
+              onDeleteSupplier={handleDeleteSupplier}
+              onToggleSupplierStatus={handleToggleSupplierStatus}
+              onPaySupplier={handlePaySupplier}
               lang={lang}
             />
           )}

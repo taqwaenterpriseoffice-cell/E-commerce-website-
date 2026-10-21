@@ -305,17 +305,50 @@ export interface ActivityLog {
 
 export interface Supplier {
   id: string;
+  contactId?: string;
   name: string;
   companyName: string;
+  businessName?: string;
   phone: string;
+  mobile?: string;
   email?: string;
   address: string;
+  creditLimit?: string | number;
+  openingBalance?: number;
+  advanceBalance?: number;
+  addedOn?: string;
   totalPurchases: number;
   paidAmount: number;
   dueBalance: number;
+  totalPurchaseDue?: number;
+  totalPurchaseReturnDue?: number;
   status: 'Active' | 'Inactive';
   notes?: string;
   createdAt: string;
+  ledger?: any[];
+}
+
+export interface Customer {
+  id: string;
+  contactId: string;
+  businessName: string;
+  name: string;
+  creditLimit: string | number;
+  openingBalance: number;
+  advanceBalance: number;
+  addedOn: string;
+  address: string;
+  mobile: string;
+  email?: string;
+  alternateContact?: string;
+  totalSaleDue: number;
+  totalSellReturnDue: number;
+  status: 'Active' | 'Inactive';
+  notes?: string;
+  createdAt: string;
+  ordersCount?: number;
+  totalPurchased?: number;
+  ledger?: any[];
 }
 
 export interface PurchaseItem {

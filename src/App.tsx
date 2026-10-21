@@ -86,7 +86,7 @@ export default function App() {
   const [isAdminView, setIsAdminView] = useState<boolean>(false);
   const [hasUserExitedAdmin, setHasUserExitedAdmin] = useState<boolean>(false);
   const [currentPath, setCurrentPath] = useState<string>(window.location.pathname || '/');
-  const [isInstalled, setIsInstalled] = useState<boolean | null>(null);
+  const [isInstalled, setIsInstalled] = useState<boolean>(true);
 
   // Dynamic Settings and Banners State
   const [settings, setSettings] = useState<any>(() => {
@@ -336,14 +336,12 @@ export default function App() {
     fetch('/api/system/install-status')
       .then(res => res.json())
       .then(data => {
-        setIsInstalled(data.configured);
         if (data.superAdminEmail) {
           localStorage.setItem('taqwa_super_admin_email', data.superAdminEmail);
         }
       })
-      .catch(err => {
-        console.error("Install status check failed", err);
-        setIsInstalled(true); // default to true if check fails to prevent lockout
+      .catch(() => {
+        // graceful fallback to active store
       });
 
     fetchProducts();
@@ -1332,7 +1330,8 @@ export default function App() {
     );
   }
 
-  if (isInstalled === false || currentPath === '/install') {
+  // Only render InstallWizard if explicitly visiting /install
+  if (currentPath === '/install') {
     return (
       <InstallWizard 
         onSuccess={() => {

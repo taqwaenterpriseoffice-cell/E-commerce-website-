@@ -142,14 +142,23 @@ export default function InstallWizard({ onSuccess }: InstallWizardProps) {
           <div className="absolute right-6 top-6 opacity-10">
             <Database className="w-24 h-24" />
           </div>
-          <div className="space-y-1 relative z-10">
-            <div className="inline-flex items-center gap-2 bg-emerald-500/20 text-emerald-300 px-2.5 py-1 rounded-md text-xs font-semibold uppercase tracking-wider">
-              <Sparkles className="w-3.5 h-3.5" /> Web Installer Wizard
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
+            <div className="space-y-1">
+              <div className="inline-flex items-center gap-2 bg-emerald-500/20 text-emerald-300 px-2.5 py-1 rounded-md text-xs font-semibold uppercase tracking-wider">
+                <Sparkles className="w-3.5 h-3.5" /> Web Installer Wizard
+              </div>
+              <h1 className="text-2xl font-bold font-serif text-slate-50">তাকওয়া এন্টারপ্রাইজ</h1>
+              <p className="text-xs text-slate-300 font-sans">
+                হোস্টিংগার (Hostinger) MySQL ডাটাবেজ ও মাস্টার অ্যাডমিন অটোমেটিক সেটআপ ও কনফিগারেশন সিস্টেম
+              </p>
             </div>
-            <h1 className="text-2xl font-bold font-serif text-slate-50">তাকওয়া এন্টারপ্রাইজ</h1>
-            <p className="text-xs text-slate-300 font-sans">
-              হোস্টিংগার (Hostinger) MySQL ডাটাবেজ ও মাস্টার অ্যাডমিন অটোমেটিক সেটআপ ও কনফিগারেশন সিস্টেম
-            </p>
+            <button
+              type="button"
+              onClick={onSuccess}
+              className="self-start sm:self-auto px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold border border-white/20 transition-all cursor-pointer shadow-sm flex items-center gap-1.5"
+            >
+              <span>সরাসরি মূল ওয়েবসাইটে যান &rarr;</span>
+            </button>
           </div>
         </div>
 

@@ -25,7 +25,13 @@ import {
   fetchCourierSettingsFromDb,
   saveCourierSettingsToDb,
   fetchSystemSettingsFromDb,
-  saveSystemSettingsToDb
+  saveSystemSettingsToDb,
+  fetchCustomersFromDb,
+  saveCustomerToDb,
+  deleteCustomerFromDb,
+  fetchSuppliersFromDb,
+  saveSupplierToDb,
+  deleteSupplierFromDb
 } from "./server/mysql";
 
 dotenv.config();
@@ -896,6 +902,7 @@ const CARTS_FILE = path.join(DB_DIR, "carts.json");
 const WISHLISTS_FILE = path.join(DB_DIR, "wishlists.json");
 const SETTINGS_FILE = path.join(DB_DIR, "settings.json");
 const SUPPLIERS_FILE = path.join(DB_DIR, "suppliers.json");
+const CUSTOMERS_FILE = path.join(DB_DIR, "customers.json");
 const PURCHASES_FILE = path.join(DB_DIR, "purchases.json");
 const EXPENSES_FILE = path.join(DB_DIR, "expenses.json");
 const DAMAGES_FILE = path.join(DB_DIR, "damages.json");
@@ -1054,42 +1061,69 @@ if (!fs.existsSync(SETTINGS_FILE)) {
 let SUPPLIERS: any[] = loadJSON(SUPPLIERS_FILE, [
   {
     id: "sup-1",
+    contactId: "CO0101",
     name: "Mohammad Rafiqul Islam",
     companyName: "Pet Nutri Wholesale Ltd",
-    phone: "01711223344",
+    businessName: "Pet Nutri Wholesale Ltd",
+    phone: "8801711223344",
+    mobile: "8801711223344",
     email: "contact@petnutri.com",
     address: "Plot #14, Tejgaon Industrial Area, Dhaka",
+    creditLimit: "No Limit",
+    openingBalance: 0.00,
+    advanceBalance: 0.00,
+    addedOn: "15-10-2026",
     totalPurchases: 145000,
     paidAmount: 120000,
     dueBalance: 25000,
+    totalPurchaseDue: 25000,
+    totalPurchaseReturnDue: 0.00,
     status: "Active",
     notes: "Main supplier for premium imported cat foods and dog nutrition mixes.",
     createdAt: new Date().toISOString()
   },
   {
     id: "sup-2",
+    contactId: "CO0102",
     name: "Abdur Rahman Faruq",
     companyName: "Bengal Aviary & Seed Mills",
-    phone: "01822334455",
+    businessName: "Bengal Aviary & Seed Mills",
+    phone: "8801822334455",
+    mobile: "8801822334455",
     email: "bengalseeds@gmail.com",
     address: "Lalbagh Road, Old Dhaka",
+    creditLimit: "No Limit",
+    openingBalance: 0.00,
+    advanceBalance: 0.00,
+    addedOn: "15-10-2026",
     totalPurchases: 88000,
     paidAmount: 88000,
     dueBalance: 0,
+    totalPurchaseDue: 0,
+    totalPurchaseReturnDue: 0.00,
     status: "Active",
     notes: "Direct seed producer for canary, budgie, and cockatiel mixes.",
     createdAt: new Date().toISOString()
   },
   {
     id: "sup-3",
+    contactId: "CO0103",
     name: "Tariqul Hasan",
     companyName: "Aqua Care & Habitat Equipment",
-    phone: "01933445566",
+    businessName: "Aqua Care & Habitat Equipment",
+    phone: "8801933445566",
+    mobile: "8801933445566",
     email: "aquacarebd@yahoo.com",
     address: "Agrabad Commercial Area, Chittagong",
+    creditLimit: "50000",
+    openingBalance: 0.00,
+    advanceBalance: 0.00,
+    addedOn: "15-10-2026",
     totalPurchases: 62000,
     paidAmount: 50000,
     dueBalance: 12000,
+    totalPurchaseDue: 12000,
+    totalPurchaseReturnDue: 0.00,
     status: "Active",
     notes: "Aquarium air pumps, bio-sponge filters and flake foods.",
     createdAt: new Date().toISOString()
@@ -1097,6 +1131,69 @@ let SUPPLIERS: any[] = loadJSON(SUPPLIERS_FILE, [
 ]);
 if (!fs.existsSync(SUPPLIERS_FILE)) {
   saveJSON(SUPPLIERS_FILE, SUPPLIERS);
+}
+
+let CUSTOMERS: any[] = loadJSON(CUSTOMERS_FILE, [
+  {
+    id: "cust-1",
+    contactId: "CO0211",
+    businessName: "YEASIN ELECTRIC KAJIMARKET",
+    name: "MD YEASIN",
+    creditLimit: "No Limit",
+    openingBalance: 0.00,
+    advanceBalance: 0.00,
+    addedOn: "15-10-2026",
+    address: "KAJIMARKET, KASHIMPUR ROAD,, GAZIPUR, Bangladesh, 1346",
+    mobile: "8801736573733",
+    email: "yeasin.electric@gmail.com",
+    alternateContact: "",
+    totalSaleDue: 1950.00,
+    totalSellReturnDue: 0.00,
+    status: "Active",
+    notes: "Retail and wholesale electrical parts & pet heating equipment buyer in Kajimarket.",
+    createdAt: "2026-10-15T10:00:00.000Z"
+  },
+  {
+    id: "cust-2",
+    contactId: "CO0212",
+    businessName: "ASLAM VAI ELE",
+    name: "MD ASLAM VAI",
+    creditLimit: "No Limit",
+    openingBalance: 0.00,
+    advanceBalance: 0.00,
+    addedOn: "15-10-2026",
+    address: "SQUARE GET KASIMPUR . GAZIPUR, KASIMPUR ,GAZIPUR, GAZIPUR, Bangladesh, 1346",
+    mobile: "8801978992950",
+    email: "aslam.ele@gmail.com",
+    alternateContact: "",
+    totalSaleDue: 4677.40,
+    totalSellReturnDue: 0.00,
+    status: "Active",
+    notes: "Square Gate Kashimpur branch regular buyer.",
+    createdAt: "2026-10-15T11:30:00.000Z"
+  },
+  {
+    id: "cust-3",
+    contactId: "CO0213",
+    businessName: "KASHEM AGRO FEED",
+    name: "ABUL KASHEM",
+    creditLimit: "25000",
+    openingBalance: 1200.00,
+    advanceBalance: 0.00,
+    addedOn: "18-10-2026",
+    address: "SARADAGANJ BAZAR, KASHIMPUR, GAZIPUR",
+    mobile: "8801819554433",
+    email: "kashem.agro@gmail.com",
+    alternateContact: "01722883311",
+    totalSaleDue: 8450.00,
+    totalSellReturnDue: 0.00,
+    status: "Active",
+    notes: "Pigeon and poultry feed merchant in Saradaganj.",
+    createdAt: "2026-10-18T09:15:00.000Z"
+  }
+]);
+if (!fs.existsSync(CUSTOMERS_FILE)) {
+  saveJSON(CUSTOMERS_FILE, CUSTOMERS);
 }
 
 let PURCHASES: any[] = loadJSON(PURCHASES_FILE, [
@@ -1316,7 +1413,18 @@ function saveSettings() {
     saveSystemSettingsToDb(SETTINGS).catch(e => console.warn("[MYSQL] Settings sync warn:", e.message));
   }
 }
-function saveSuppliers() { saveJSON(SUPPLIERS_FILE, SUPPLIERS); }
+function saveSuppliers() { 
+  saveJSON(SUPPLIERS_FILE, SUPPLIERS); 
+  if (isMySqlConnected()) {
+    SUPPLIERS.forEach(s => saveSupplierToDb(s).catch(e => console.warn("[MYSQL] Supplier sync warn:", e.message)));
+  }
+}
+function saveCustomers() { 
+  saveJSON(CUSTOMERS_FILE, CUSTOMERS); 
+  if (isMySqlConnected()) {
+    CUSTOMERS.forEach(c => saveCustomerToDb(c).catch(e => console.warn("[MYSQL] Customer sync warn:", e.message)));
+  }
+}
 function savePurchases() { saveJSON(PURCHASES_FILE, PURCHASES); }
 function saveExpenses() { saveJSON(EXPENSES_FILE, EXPENSES); }
 function saveDamages() { saveJSON(DAMAGES_FILE, DAMAGES); }
@@ -3333,22 +3441,48 @@ app.get("/api/admin/suppliers", checkAdminRole(["Super Admin", "Admin", "Manager
 });
 
 app.post("/api/admin/add-supplier", checkAdminRole(["Super Admin", "Admin", "Manager"]), (req, res) => {
-  const { name, companyName, phone, email, address, notes } = req.body;
-  if (!name || !phone) {
-    return res.status(400).json({ error: "Supplier name and phone number are required." });
+  const { 
+    name, 
+    companyName, 
+    businessName, 
+    contactId, 
+    phone, 
+    mobile, 
+    email, 
+    address, 
+    creditLimit, 
+    openingBalance, 
+    advanceBalance, 
+    addedOn, 
+    notes, 
+    status 
+  } = req.body;
+
+  if (!name || (!phone && !mobile)) {
+    return res.status(400).json({ error: "Supplier name and contact phone number are required." });
   }
 
+  const generatedContactId = contactId || `SU${String(SUPPLIERS.length + 1).padStart(4, '0')}`;
   const newSupplier = {
     id: `sup-${Date.now()}`,
+    contactId: generatedContactId,
     name,
-    companyName: companyName || name,
-    phone,
+    companyName: companyName || businessName || name,
+    businessName: businessName || companyName || name,
+    phone: phone || mobile || "",
+    mobile: mobile || phone || "",
     email: email || "",
     address: address || "",
+    creditLimit: creditLimit !== undefined ? creditLimit : "No Limit",
+    openingBalance: Number(openingBalance) || 0,
+    advanceBalance: Number(advanceBalance) || 0,
+    addedOn: addedOn || new Date().toLocaleDateString('en-GB'),
     totalPurchases: 0,
     paidAmount: 0,
-    dueBalance: 0,
-    status: "Active",
+    dueBalance: Number(openingBalance) || 0,
+    totalPurchaseDue: Number(openingBalance) || 0,
+    totalPurchaseReturnDue: 0.00,
+    status: status || "Active",
     notes: notes || "",
     createdAt: new Date().toISOString()
   };
@@ -3359,22 +3493,64 @@ app.post("/api/admin/add-supplier", checkAdminRole(["Super Admin", "Admin", "Man
 });
 
 app.post("/api/admin/update-supplier", checkAdminRole(["Super Admin", "Admin", "Manager"]), (req, res) => {
-  const { id, name, companyName, phone, email, address, notes, status } = req.body;
+  const { 
+    id, 
+    contactId,
+    name, 
+    companyName, 
+    businessName, 
+    phone, 
+    mobile, 
+    email, 
+    address, 
+    creditLimit, 
+    openingBalance, 
+    advanceBalance, 
+    addedOn, 
+    notes, 
+    status,
+    totalPurchaseDue,
+    totalPurchaseReturnDue 
+  } = req.body;
+
   const sup = SUPPLIERS.find(s => s.id === id);
   if (!sup) {
     return res.status(404).json({ error: "Supplier not found." });
   }
 
+  if (contactId !== undefined) sup.contactId = contactId;
   if (name !== undefined) sup.name = name;
   if (companyName !== undefined) sup.companyName = companyName;
+  if (businessName !== undefined) sup.businessName = businessName;
   if (phone !== undefined) sup.phone = phone;
+  if (mobile !== undefined) sup.mobile = mobile;
   if (email !== undefined) sup.email = email;
   if (address !== undefined) sup.address = address;
+  if (creditLimit !== undefined) sup.creditLimit = creditLimit;
+  if (openingBalance !== undefined) sup.openingBalance = Number(openingBalance);
+  if (advanceBalance !== undefined) sup.advanceBalance = Number(advanceBalance);
+  if (addedOn !== undefined) sup.addedOn = addedOn;
   if (notes !== undefined) sup.notes = notes;
   if (status !== undefined) sup.status = status;
+  if (totalPurchaseDue !== undefined) {
+    sup.totalPurchaseDue = Number(totalPurchaseDue);
+    sup.dueBalance = Number(totalPurchaseDue);
+  }
+  if (totalPurchaseReturnDue !== undefined) sup.totalPurchaseReturnDue = Number(totalPurchaseReturnDue);
 
   saveSuppliers();
   res.json({ success: true, supplier: sup });
+});
+
+app.post("/api/admin/toggle-supplier-status", checkAdminRole(["Super Admin", "Admin", "Manager"]), (req, res) => {
+  const { id } = req.body;
+  const sup = SUPPLIERS.find(s => s.id === id);
+  if (!sup) {
+    return res.status(404).json({ error: "Supplier not found." });
+  }
+  sup.status = sup.status === 'Active' ? 'Inactive' : 'Active';
+  saveSuppliers();
+  res.json({ success: true, status: sup.status, supplier: sup });
 });
 
 app.post("/api/admin/delete-supplier", checkAdminRole(["Super Admin", "Admin"]), (req, res) => {
@@ -3386,7 +3562,168 @@ app.post("/api/admin/delete-supplier", checkAdminRole(["Super Admin", "Admin"]),
 
   SUPPLIERS.splice(index, 1);
   saveSuppliers();
+  if (isMySqlConnected()) {
+    deleteSupplierFromDb(id).catch(e => console.warn("[MYSQL] Delete supplier DB err:", e.message));
+  }
   res.json({ success: true, message: "Supplier deleted successfully." });
+});
+
+// 1.1 CUSTOMERS MANAGEMENT (Contacts > Customers)
+app.get("/api/admin/customers", checkAdminRole(["Super Admin", "Admin", "Manager"]), (req, res) => {
+  res.json(CUSTOMERS);
+});
+
+app.post("/api/admin/add-customer", checkAdminRole(["Super Admin", "Admin", "Manager"]), (req, res) => {
+  const {
+    contactId,
+    businessName,
+    name,
+    creditLimit,
+    openingBalance,
+    advanceBalance,
+    addedOn,
+    address,
+    mobile,
+    email,
+    alternateContact,
+    totalSaleDue,
+    totalSellReturnDue,
+    status,
+    notes
+  } = req.body;
+
+  if (!name || !mobile) {
+    return res.status(400).json({ error: "Customer name and mobile phone number are required." });
+  }
+
+  const generatedContactId = contactId || `CO${String(CUSTOMERS.length + 211).padStart(5, '0')}`;
+  const newCustomer = {
+    id: `cust-${Date.now()}`,
+    contactId: generatedContactId,
+    businessName: businessName || name,
+    name,
+    creditLimit: creditLimit !== undefined ? creditLimit : "No Limit",
+    openingBalance: Number(openingBalance) || 0,
+    advanceBalance: Number(advanceBalance) || 0,
+    addedOn: addedOn || new Date().toLocaleDateString('en-GB'),
+    address: address || "",
+    mobile: String(mobile),
+    email: email || "",
+    alternateContact: alternateContact || "",
+    totalSaleDue: Number(totalSaleDue) || Number(openingBalance) || 0,
+    totalSellReturnDue: Number(totalSellReturnDue) || 0,
+    status: status || "Active",
+    notes: notes || "",
+    createdAt: new Date().toISOString()
+  };
+
+  CUSTOMERS.unshift(newCustomer);
+  saveCustomers();
+  res.json({ success: true, customer: newCustomer });
+});
+
+app.post("/api/admin/update-customer", checkAdminRole(["Super Admin", "Admin", "Manager"]), (req, res) => {
+  const {
+    id,
+    contactId,
+    businessName,
+    name,
+    creditLimit,
+    openingBalance,
+    advanceBalance,
+    addedOn,
+    address,
+    mobile,
+    email,
+    alternateContact,
+    totalSaleDue,
+    totalSellReturnDue,
+    status,
+    notes
+  } = req.body;
+
+  const cust = CUSTOMERS.find(c => c.id === id);
+  if (!cust) {
+    return res.status(404).json({ error: "Customer not found." });
+  }
+
+  if (contactId !== undefined) cust.contactId = contactId;
+  if (businessName !== undefined) cust.businessName = businessName;
+  if (name !== undefined) cust.name = name;
+  if (creditLimit !== undefined) cust.creditLimit = creditLimit;
+  if (openingBalance !== undefined) cust.openingBalance = Number(openingBalance);
+  if (advanceBalance !== undefined) cust.advanceBalance = Number(advanceBalance);
+  if (addedOn !== undefined) cust.addedOn = addedOn;
+  if (address !== undefined) cust.address = address;
+  if (mobile !== undefined) cust.mobile = String(mobile);
+  if (email !== undefined) cust.email = email;
+  if (alternateContact !== undefined) cust.alternateContact = alternateContact;
+  if (totalSaleDue !== undefined) cust.totalSaleDue = Number(totalSaleDue);
+  if (totalSellReturnDue !== undefined) cust.totalSellReturnDue = Number(totalSellReturnDue);
+  if (status !== undefined) cust.status = status;
+  if (notes !== undefined) cust.notes = notes;
+
+  saveCustomers();
+  res.json({ success: true, customer: cust });
+});
+
+app.post("/api/admin/toggle-customer-status", checkAdminRole(["Super Admin", "Admin", "Manager"]), (req, res) => {
+  const { id } = req.body;
+  const cust = CUSTOMERS.find(c => c.id === id);
+  if (!cust) {
+    return res.status(404).json({ error: "Customer not found." });
+  }
+  cust.status = cust.status === 'Active' ? 'Inactive' : 'Active';
+  saveCustomers();
+  res.json({ success: true, status: cust.status, customer: cust });
+});
+
+app.post("/api/admin/delete-customer", checkAdminRole(["Super Admin", "Admin"]), (req, res) => {
+  const { id } = req.body;
+  const index = CUSTOMERS.findIndex(c => c.id === id);
+  if (index === -1) {
+    return res.status(404).json({ error: "Customer not found." });
+  }
+
+  CUSTOMERS.splice(index, 1);
+  saveCustomers();
+  if (isMySqlConnected()) {
+    deleteCustomerFromDb(id).catch(e => console.warn("[MYSQL] Delete customer DB err:", e.message));
+  }
+  res.json({ success: true, message: "Customer deleted successfully." });
+});
+
+app.post("/api/admin/pay-customer-due", checkAdminRole(["Super Admin", "Admin", "Manager"]), (req: any, res) => {
+  const { customerId, amount, paymentMethod, notes } = req.body;
+  const payAmt = Number(amount);
+  if (!customerId || isNaN(payAmt) || payAmt <= 0) {
+    return res.status(400).json({ error: "Valid customer and payment amount are required." });
+  }
+
+  const cust = CUSTOMERS.find(c => c.id === customerId);
+  if (!cust) {
+    return res.status(404).json({ error: "Customer not found." });
+  }
+
+  cust.totalSaleDue = Math.max(0, (cust.totalSaleDue || 0) - payAmt);
+  saveCustomers();
+
+  // Create accounts ledger income transaction
+  const tx = {
+    id: `tx-${Date.now()}`,
+    date: new Date().toISOString(),
+    type: "Income",
+    category: "Customer Due Recovery",
+    amount: payAmt,
+    method: paymentMethod || "Cash",
+    description: `Due collection from customer ${cust.businessName || cust.name} (${cust.contactId || cust.id})${notes ? ` - ${notes}` : ''}`,
+    referenceId: customerId,
+    operator: req.requestUser?.email || "admin@taqwa.com"
+  };
+  ACCOUNTS_TRANSACTIONS.unshift(tx);
+  saveAccounts();
+
+  res.json({ success: true, customer: cust, transaction: tx });
 });
 
 app.post("/api/admin/pay-supplier", checkAdminRole(["Super Admin", "Admin", "Manager"]), (req: any, res) => {
@@ -4402,6 +4739,30 @@ async function startServer() {
         saveJSON(SETTINGS_FILE, SETTINGS);
       } else {
         saveSystemSettingsToDb(SETTINGS).catch(() => {});
+      }
+
+      // Hydrate Customers from MySQL
+      const dbCustomers = await fetchCustomersFromDb();
+      if (dbCustomers && dbCustomers.length > 0) {
+        CUSTOMERS = dbCustomers;
+        saveJSON(CUSTOMERS_FILE, CUSTOMERS);
+        console.log(`[MYSQL] Successfully loaded ${CUSTOMERS.length} customers from MySQL!`);
+      } else if (CUSTOMERS.length > 0) {
+        for (const c of CUSTOMERS) {
+          saveCustomerToDb(c).catch(() => {});
+        }
+      }
+
+      // Hydrate Suppliers from MySQL
+      const dbSuppliers = await fetchSuppliersFromDb();
+      if (dbSuppliers && dbSuppliers.length > 0) {
+        SUPPLIERS = dbSuppliers;
+        saveJSON(SUPPLIERS_FILE, SUPPLIERS);
+        console.log(`[MYSQL] Successfully loaded ${SUPPLIERS.length} suppliers from MySQL!`);
+      } else if (SUPPLIERS.length > 0) {
+        for (const s of SUPPLIERS) {
+          saveSupplierToDb(s).catch(() => {});
+        }
       }
     }
   } catch (dbErr: any) {

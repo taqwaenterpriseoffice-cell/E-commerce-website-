@@ -449,6 +449,27 @@ async function createSchema() {
       transaction_date DATE NOT NULL,
       notes TEXT DEFAULT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;`,
+
+    // 18. Customers Contact Directory
+    `CREATE TABLE IF NOT EXISTS customers (
+      id VARCHAR(64) PRIMARY KEY,
+      contact_id VARCHAR(64) DEFAULT NULL,
+      business_name VARCHAR(255) DEFAULT NULL,
+      name VARCHAR(255) NOT NULL,
+      credit_limit VARCHAR(64) DEFAULT 'No Limit',
+      opening_balance DECIMAL(12, 2) DEFAULT 0.00,
+      advance_balance DECIMAL(12, 2) DEFAULT 0.00,
+      added_on VARCHAR(64) DEFAULT NULL,
+      address TEXT DEFAULT NULL,
+      mobile VARCHAR(64) DEFAULT NULL,
+      email VARCHAR(191) DEFAULT NULL,
+      alternate_contact VARCHAR(64) DEFAULT NULL,
+      total_sale_due DECIMAL(12, 2) DEFAULT 0.00,
+      total_sell_return_due DECIMAL(12, 2) DEFAULT 0.00,
+      status VARCHAR(32) DEFAULT 'Active',
+      notes TEXT DEFAULT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;`
   ];
 
@@ -457,6 +478,28 @@ async function createSchema() {
       await pool.query(q);
     } catch (e: any) {
       console.error("[MYSQL] Error creating table:", e.message);
+    }
+  }
+
+  // Ensure contact columns in suppliers table
+  const supplierColumns = [
+    "ALTER TABLE suppliers ADD COLUMN contact_id VARCHAR(64) DEFAULT NULL;",
+    "ALTER TABLE suppliers ADD COLUMN business_name VARCHAR(255) DEFAULT NULL;",
+    "ALTER TABLE suppliers ADD COLUMN credit_limit VARCHAR(64) DEFAULT 'No Limit';",
+    "ALTER TABLE suppliers ADD COLUMN opening_balance DECIMAL(12, 2) DEFAULT 0.00;",
+    "ALTER TABLE suppliers ADD COLUMN advance_balance DECIMAL(12, 2) DEFAULT 0.00;",
+    "ALTER TABLE suppliers ADD COLUMN added_on VARCHAR(64) DEFAULT NULL;",
+    "ALTER TABLE suppliers ADD COLUMN mobile VARCHAR(64) DEFAULT NULL;",
+    "ALTER TABLE suppliers ADD COLUMN total_purchase_due DECIMAL(12, 2) DEFAULT 0.00;",
+    "ALTER TABLE suppliers ADD COLUMN total_purchase_return_due DECIMAL(12, 2) DEFAULT 0.00;",
+    "ALTER TABLE suppliers ADD COLUMN status VARCHAR(32) DEFAULT 'Active';",
+    "ALTER TABLE suppliers ADD COLUMN notes TEXT DEFAULT NULL;"
+  ];
+  for (const sCol of supplierColumns) {
+    try {
+      await pool.query(sCol);
+    } catch (e) {
+      // ignore if exists
     }
   }
 
@@ -1007,13 +1050,205 @@ export async function saveSystemSettingsToDb(settings: any): Promise<boolean> {
   if (!isMySqlConnected()) return false;
   try {
     await pool!.query(
-      `INSERT INTO system_settings (id, settings_json) VALUES ('primary', ?)
-       ON DUPLICATE KEY UPDATE settings_json=VALUES(settings_json)`,
+      `INSERT INTO system_settings (id, settings_json)
+       VALUES ('primary', ?)
+       ON DUPLICATE KEY UPDATE 
+         settings_json = VALUES(settings_json)`,
       [JSON.stringify(settings)]
     );
     return true;
   } catch (err: any) {
     console.error("[MYSQL] Error saving system settings to DB:", err.message);
+    return false;
+  }
+}
+
+export async function fetchCustomersFromDb(): Promise<any[] | null> {
+  if (!isMySqlConnected()) return null;
+  try {
+    const [rows]: any = await pool!.query("SELECT * FROM customers ORDER BY created_at DESC");
+    return rows.map((r: any) => ({
+      id: r.id,
+      contactId: r.contact_id || `CO${r.id.slice(-4)}`,
+      businessName: r.business_name || '',
+      name: r.name,
+      creditLimit: r.credit_limit || 'No Limit',
+      openingBalance: Number(r.opening_balance) || 0,
+      advanceBalance: Number(r.advance_balance) || 0,
+      addedOn: r.added_on || (r.created_at ? new Date(r.created_at).toLocaleDateString('en-GB') : '15-10-2026'),
+      address: r.address || '',
+      mobile: r.mobile || '',
+      email: r.email || '',
+      alternateContact: r.alternate_contact || '',
+      totalSaleDue: Number(r.total_sale_due) || 0,
+      totalSellReturnDue: Number(r.total_sell_return_due) || 0,
+      status: r.status || 'Active',
+      notes: r.notes || '',
+      createdAt: r.created_at ? new Date(r.created_at).toISOString() : new Date().toISOString()
+    }));
+  } catch (err: any) {
+    console.error("[MYSQL] Error fetching customers:", err.message);
+    return null;
+  }
+}
+
+export async function saveCustomerToDb(c: any): Promise<boolean> {
+  if (!isMySqlConnected()) return false;
+  try {
+    await pool!.query(
+      `INSERT INTO customers (
+        id, contact_id, business_name, name, credit_limit, opening_balance,
+        advance_balance, added_on, address, mobile, email, alternate_contact,
+        total_sale_due, total_sell_return_due, status, notes
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON DUPLICATE KEY UPDATE
+        contact_id=VALUES(contact_id),
+        business_name=VALUES(business_name),
+        name=VALUES(name),
+        credit_limit=VALUES(credit_limit),
+        opening_balance=VALUES(opening_balance),
+        advance_balance=VALUES(advance_balance),
+        added_on=VALUES(added_on),
+        address=VALUES(address),
+        mobile=VALUES(mobile),
+        email=VALUES(email),
+        alternate_contact=VALUES(alternate_contact),
+        total_sale_due=VALUES(total_sale_due),
+        total_sell_return_due=VALUES(total_sell_return_due),
+        status=VALUES(status),
+        notes=VALUES(notes)`,
+      [
+        c.id,
+        c.contactId || c.id,
+        c.businessName || '',
+        c.name || 'Valued Customer',
+        c.creditLimit !== undefined ? String(c.creditLimit) : 'No Limit',
+        Number(c.openingBalance) || 0,
+        Number(c.advanceBalance) || 0,
+        c.addedOn || new Date().toLocaleDateString('en-GB'),
+        c.address || '',
+        c.mobile || c.phone || '',
+        c.email || '',
+        c.alternateContact || '',
+        Number(c.totalSaleDue) || 0,
+        Number(c.totalSellReturnDue) || 0,
+        c.status || 'Active',
+        c.notes || ''
+      ]
+    );
+    return true;
+  } catch (err: any) {
+    console.error("[MYSQL] Error saving customer to DB:", err.message);
+    return false;
+  }
+}
+
+export async function deleteCustomerFromDb(id: string): Promise<boolean> {
+  if (!isMySqlConnected()) return false;
+  try {
+    await pool!.query("DELETE FROM customers WHERE id = ?", [id]);
+    return true;
+  } catch (err: any) {
+    console.error("[MYSQL] Error deleting customer from DB:", err.message);
+    return false;
+  }
+}
+
+export async function fetchSuppliersFromDb(): Promise<any[] | null> {
+  if (!isMySqlConnected()) return null;
+  try {
+    const [rows]: any = await pool!.query("SELECT * FROM suppliers ORDER BY created_at DESC");
+    return rows.map((r: any) => ({
+      id: r.id,
+      contactId: r.contact_id || `CO${r.id.slice(-4)}`,
+      name: r.name,
+      companyName: r.company || r.business_name || r.name,
+      businessName: r.business_name || r.company || r.name,
+      phone: r.phone || r.mobile || '',
+      mobile: r.mobile || r.phone || '',
+      email: r.email || '',
+      address: r.address || '',
+      creditLimit: r.credit_limit || 'No Limit',
+      openingBalance: Number(r.opening_balance) || 0,
+      advanceBalance: Number(r.advance_balance) || 0,
+      addedOn: r.added_on || (r.created_at ? new Date(r.created_at).toLocaleDateString('en-GB') : '15-10-2026'),
+      totalPurchases: Number(r.balance) || 0,
+      paidAmount: 0,
+      dueBalance: Number(r.total_purchase_due) || Number(r.balance) || 0,
+      totalPurchaseDue: Number(r.total_purchase_due) || Number(r.balance) || 0,
+      totalPurchaseReturnDue: Number(r.total_purchase_return_due) || 0,
+      status: r.status || 'Active',
+      notes: r.notes || '',
+      createdAt: r.created_at ? new Date(r.created_at).toISOString() : new Date().toISOString()
+    }));
+  } catch (err: any) {
+    console.error("[MYSQL] Error fetching suppliers:", err.message);
+    return null;
+  }
+}
+
+export async function saveSupplierToDb(s: any): Promise<boolean> {
+  if (!isMySqlConnected()) return false;
+  try {
+    await pool!.query(
+      `INSERT INTO suppliers (
+        id, contact_id, name, phone, mobile, email, address, company, business_name,
+        balance, credit_limit, opening_balance, advance_balance, added_on,
+        total_purchase_due, total_purchase_return_due, status, notes
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON DUPLICATE KEY UPDATE
+        contact_id=VALUES(contact_id),
+        name=VALUES(name),
+        phone=VALUES(phone),
+        mobile=VALUES(mobile),
+        email=VALUES(email),
+        address=VALUES(address),
+        company=VALUES(company),
+        business_name=VALUES(business_name),
+        balance=VALUES(balance),
+        credit_limit=VALUES(credit_limit),
+        opening_balance=VALUES(opening_balance),
+        advance_balance=VALUES(advance_balance),
+        added_on=VALUES(added_on),
+        total_purchase_due=VALUES(total_purchase_due),
+        total_purchase_return_due=VALUES(total_purchase_return_due),
+        status=VALUES(status),
+        notes=VALUES(notes)`,
+      [
+        s.id,
+        s.contactId || s.id,
+        s.name,
+        s.phone || s.mobile || '',
+        s.mobile || s.phone || '',
+        s.email || '',
+        s.address || '',
+        s.companyName || s.businessName || '',
+        s.businessName || s.companyName || '',
+        Number(s.dueBalance) || Number(s.totalPurchases) || 0,
+        s.creditLimit !== undefined ? String(s.creditLimit) : 'No Limit',
+        Number(s.openingBalance) || 0,
+        Number(s.advanceBalance) || 0,
+        s.addedOn || new Date().toLocaleDateString('en-GB'),
+        Number(s.dueBalance) || Number(s.totalPurchaseDue) || 0,
+        Number(s.totalPurchaseReturnDue) || 0,
+        s.status || 'Active',
+        s.notes || ''
+      ]
+    );
+    return true;
+  } catch (err: any) {
+    console.error("[MYSQL] Error saving supplier to DB:", err.message);
+    return false;
+  }
+}
+
+export async function deleteSupplierFromDb(id: string): Promise<boolean> {
+  if (!isMySqlConnected()) return false;
+  try {
+    await pool!.query("DELETE FROM suppliers WHERE id = ?", [id]);
+    return true;
+  } catch (err: any) {
+    console.error("[MYSQL] Error deleting supplier from DB:", err.message);
     return false;
   }
 }
@@ -1042,6 +1277,7 @@ export async function exportDbToSql(): Promise<string> {
     'coupons',
     'categories',
     'suppliers',
+    'customers',
     'purchases',
     'inventory_logs',
     'damages',
